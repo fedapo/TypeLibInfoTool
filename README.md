@@ -55,8 +55,7 @@ in the command line.
 After this step you are set to go. Double-click on the file
 _TypeLibInfoTool.hta_ and the application will start. Here is a snapshot of it.
 
-![images/com_typelib_tool.png](com_typelib_tool.png)
-height="417" width="450"
+![screenshot](images/com_typelib_tool.png =417x450)
 
 From this point on three operations are possible.
   
@@ -70,11 +69,11 @@ The IDL file is an essential part when building a COM component. It
 defines the set of all interfaces, coclasses, enums, etc. that make up 
 the interface of the type library. They are commonly used in C/C++ 
 projects for this purpose. It is often necessary to inspect the IDL file
- that was originally used to make a COM component, while this is seldom 
+that was originally used to make a COM component, while this is seldom 
 available it can be reconstructed. Moreover, VB6 projects that result in
- COM components do not make explicit use IDL files, this is often a 
+COM components do not make explicit use IDL files, this is often a 
 problem as some essential information is kept hidden. Again, the ability
- to reconstruct the IDL file is critical. An interesting web page on 
+to reconstruct the IDL file is critical. An interesting web page on 
 this topic can be found here [\[3\]](#ref3).
 
 The TypeLibInfoTool allows this operation, by clicking on the 
@@ -85,16 +84,16 @@ file (dll, ocx, exe, tlb).
 
 Applications traditionally use COM components by looking up in the 
 registry for the place where it is located (and other information). This
- is possible as every component goes through a registration phase where 
+is possible as every component goes through a registration phase where 
 its information gets written to the registry. This is usually 
 accomplished when installing a piece of software. This has always been 
 the model used by OLE/COM. While perfectly all right for many purposes, 
 sometimes a one-click deployment is more desirable. More recently, 
 starting from Windows XP another approach can be taken (see [\[4\]](#ref4)).
- A special file can be present in the same folder as the executable 
+A special file can be present in the same folder as the executable 
 which contains all registration information, the file has the same name 
 as the executable with a .manifest extention appended. The OS checks for
- the presence of this file and uses it before looking up the Windows 
+the presence of this file and uses it before looking up the Windows 
 registry. This removes the need for the regitration phase.
 
 A manifest file is written as XML format and has a format which can 
@@ -104,57 +103,57 @@ information for a specific component. For instance, consider the
 following fragment.
 
 ```xml
-  <file name='C:\WINDOWS\system32\msscript.ocx'>
-    <typelib tlbid='{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}' version='1.0' flags='' helpdir=''/>
-    <comClass progid='MSScriptControl.Procedure' clsid='{0E59F1DA-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
-    <comClass progid='MSScriptControl.Procedures' clsid='{0E59F1DB-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
-    <comClass progid='MSScriptControl.Module' clsid='{0E59F1DC-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
-    <comClass progid='MSScriptControl.Modules' clsid='{0E59F1DD-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
-    <comClass progid='MSScriptControl.Error' clsid='{0E59F1DE-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
-    <comClass progid='MSScriptControl.ScriptControl' clsid='{0E59F1D5-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
-  </file>
-  <comInterfaceExternalProxyStub
-    name='IScriptProcedure'
-    iid='{70841C73-067D-11D0-95D8-00A02463AB28}'
-    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
-    baseInterface='{00000000-0000-0000-C000-000000000046}'
-    tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
-  <comInterfaceExternalProxyStub
-    name='IScriptProcedureCollection'
-    iid='{70841C71-067D-11D0-95D8-00A02463AB28}'
-    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
-    baseInterface='{00000000-0000-0000-C000-000000000046}'
-    tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
-  <comInterfaceExternalProxyStub
-    name='IScriptModule'
-    iid='{70841C70-067D-11D0-95D8-00A02463AB28}'
-    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
-    baseInterface='{00000000-0000-0000-C000-000000000046}'
-    tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
-  <comInterfaceExternalProxyStub
-    name='IScriptModuleCollection'
-    iid='{70841C6F-067D-11D0-95D8-00A02463AB28}'
-    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
-    baseInterface='{00000000-0000-0000-C000-000000000046}'
-    tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
-  <comInterfaceExternalProxyStub
-    name='IScriptError'
-    iid='{70841C78-067D-11D0-95D8-00A02463AB28}'
-    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
-    baseInterface='{00000000-0000-0000-C000-000000000046}'
-    tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
-  <comInterfaceExternalProxyStub
-    name='IScriptControl'
-    iid='{0E59F1D3-1FBE-11D0-8FF2-00A0D10038BC}'
-    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
-    baseInterface='{00000000-0000-0000-C000-000000000046}'
-    tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
-  <comInterfaceExternalProxyStub
-    name='DScriptControlSource'
-    iid='{8B167D60-8605-11D0-ABCB-00A0C90FFFC0}'
-    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
-    baseInterface='{00000000-0000-0000-C000-000000000046}'
-    tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
+<file name='C:\WINDOWS\system32\msscript.ocx'>
+  <typelib tlbid='{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}' version='1.0' flags='' helpdir=''/>
+  <comClass progid='MSScriptControl.Procedure' clsid='{0E59F1DA-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
+  <comClass progid='MSScriptControl.Procedures' clsid='{0E59F1DB-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
+  <comClass progid='MSScriptControl.Module' clsid='{0E59F1DC-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
+  <comClass progid='MSScriptControl.Modules' clsid='{0E59F1DD-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
+  <comClass progid='MSScriptControl.Error' clsid='{0E59F1DE-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
+  <comClass progid='MSScriptControl.ScriptControl' clsid='{0E59F1D5-1FBE-11D0-8FF2-00A0D10038BC}' threadingModel='Apartment'/>
+</file>
+<comInterfaceExternalProxyStub
+  name='IScriptProcedure'
+  iid='{70841C73-067D-11D0-95D8-00A02463AB28}'
+  proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
+  baseInterface='{00000000-0000-0000-C000-000000000046}'
+  tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
+<comInterfaceExternalProxyStub
+  name='IScriptProcedureCollection'
+  iid='{70841C71-067D-11D0-95D8-00A02463AB28}'
+  proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
+  baseInterface='{00000000-0000-0000-C000-000000000046}'
+  tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
+<comInterfaceExternalProxyStub
+  name='IScriptModule'
+  iid='{70841C70-067D-11D0-95D8-00A02463AB28}'
+  proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
+  baseInterface='{00000000-0000-0000-C000-000000000046}'
+  tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
+<comInterfaceExternalProxyStub
+  name='IScriptModuleCollection'
+  iid='{70841C6F-067D-11D0-95D8-00A02463AB28}'
+  proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
+  baseInterface='{00000000-0000-0000-C000-000000000046}'
+  tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
+<comInterfaceExternalProxyStub
+  name='IScriptError'
+  iid='{70841C78-067D-11D0-95D8-00A02463AB28}'
+  proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
+  baseInterface='{00000000-0000-0000-C000-000000000046}'
+  tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
+<comInterfaceExternalProxyStub
+  name='IScriptControl'
+  iid='{0E59F1D3-1FBE-11D0-8FF2-00A0D10038BC}'
+  proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
+  baseInterface='{00000000-0000-0000-C000-000000000046}'
+  tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
+<comInterfaceExternalProxyStub
+  name='DScriptControlSource'
+  iid='{8B167D60-8605-11D0-ABCB-00A0C90FFFC0}'
+  proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'
+  baseInterface='{00000000-0000-0000-C000-000000000046}'
+  tlbid = '{0E59F1D2-1FBE-11D0-8FF2-00A0D10038BC}'/>
 ```
 
 This is the output of the TypeLibInfoTool for the component _msscript.ocx_
@@ -211,7 +210,7 @@ operations above.
 ## Design
 
 The application is written as an HTML Application. This means it is a
- special kind of web page that gets displayed within an application 
+special kind of web page that gets displayed within an application 
 frame instead of a web browser and is not subject to the usual 
 restrictions when accessing system resource or executing code in COM 
 components. All the logic is implemented as Javascript function within 
@@ -245,9 +244,6 @@ the interest this article can raise.
 ## References
 
 <a id="ref1"></a>[1] [Registration-Free Activation of COM Components: A Walkthrough](http://msdn.microsoft.com/en-us/library/ms973913.aspx)
-
 <a id="ref2"></a>[2] [Visual Basic: Inspect COM Components Using the TypeLib Information Object Library](http://msdn.microsoft.com/en-us/magazine/bb985086.aspx)
-
 <a id="ref3"></a>[3] [Creating Type Libraries Using IDL](http://edndoc.esri.com/arcobjects/9.1/ExtendingArcObjects/Ch02/TypeLibrariesAndIDL.htm)
-
 <a id="ref4"></a>[4] [Simplify App Deployment with ClickOnce and Registration-Free COM](http://msdn.microsoft.com/en-us/magazine/cc188708.aspx)
