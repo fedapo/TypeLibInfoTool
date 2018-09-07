@@ -55,7 +55,7 @@ in the command line.
 After this step you are set to go. Double-click on the file
 _TypeLibInfoTool.hta_ and the application will start. Here is a snapshot of it.
 
-![screenshot](images/com_typelib_tool.png =417x450)
+![screenshot](images/com_typelib_tool.png)
 
 From this point on three operations are possible.
   
@@ -243,7 +243,7 @@ the interest this article can raise.
 
 ## References
 
-<a id="ref1"></a>[1] [Registration-Free Activation of COM Components: A Walkthrough](http://msdn.microsoft.com/en-us/library/ms973913.aspx)
-<a id="ref2"></a>[2] [Visual Basic: Inspect COM Components Using the TypeLib Information Object Library](http://msdn.microsoft.com/en-us/magazine/bb985086.aspx)
-<a id="ref3"></a>[3] [Creating Type Libraries Using IDL](http://edndoc.esri.com/arcobjects/9.1/ExtendingArcObjects/Ch02/TypeLibrariesAndIDL.htm)
+<a id="ref1"></a>[1] [Registration-Free Activation of COM Components: A Walkthrough](http://msdn.microsoft.com/en-us/library/ms973913.aspx) \
+<a id="ref2"></a>[2] [Visual Basic: Inspect COM Components Using the TypeLib Information Object Library](http://msdn.microsoft.com/en-us/magazine/bb985086.aspx) \
+<a id="ref3"></a>[3] [Creating Type Libraries Using IDL](http://edndoc.esri.com/arcobjects/9.1/ExtendingArcObjects/Ch02/TypeLibrariesAndIDL.htm) \
 <a id="ref4"></a>[4] [Simplify App Deployment with ClickOnce and Registration-Free COM](http://msdn.microsoft.com/en-us/magazine/cc188708.aspx)
