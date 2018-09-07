@@ -1,0 +1,1111 @@
+<html>
+<head>
+<hta:application
+  id='TypeLibInfoTool'
+  scroll='yes'
+  singleinstance='no'
+  windowstate='normal'
+  selection='no'
+  innerborder='no'
+  caption='yes'
+  showintaskbar='yes'
+  sysmenu='yes'
+  maximizeButton='yes'
+  contextmenu='yes'
+/>
+
+<title>TypeLib Info Tool</title>
+<style>
+body
+{
+  background-color: buttonface;
+  font-family: Helvetica;
+  font-size: 8pt;
+  margin-top: 2px;
+  margin-left: 8px;
+  margin-right: 3px;
+  margin-bottom: 3px;
+}
+
+textarea
+{
+  font-family: Courier New;
+  font-size: 8pt;
+/*
+  margin-left: 3px;
+  margin-right: 3px;
+*/
+}
+
+select
+{
+  font-family: Arial;
+  font-size: 8pt;
+  width: 450px;
+  margin-left: 0px;
+}
+
+.readonly
+{
+  background-color: buttonface;
+}
+
+.type
+{
+  font-attribute: bold;
+}
+
+.elements
+{
+  margin-left: 16px;
+}
+</style>
+<script type='text/javascript'>
+/*
+Copyright (c) 2004 Federico Aponte. All rights reserved.
+e-mail: federico.aponte@gmail.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+function $(element)
+{
+  if(arguments.length > 1)
+  {
+    for (var i=0, elements=[], length=arguments.length; i<length; ++i)
+      elements.push($(arguments[i]));
+    return elements;
+  }
+/*
+  if(Object.isString(element))
+    element = document.getElementById(element);
+  return Element.extend(element);
+*/
+  return document.getElementById(element);
+}
+
+var TKIND =
+{
+  ENUM: 0,
+  RECORD: 1,
+  MODULE: 2,
+  INTERFACE: 3,
+  DISPATCH: 4,
+  COCLASS: 5,
+  ALIAS: 6,
+  UNION: 7,
+  MAX: 8
+};
+
+function LoadTypeLib()
+{
+  $("filedlg").click();
+  if($("filedlg").value != "")
+  {
+    QuickTypeLibInfo($("filedlg").value);
+  }
+}
+
+function GetManifestInfo()
+{
+  $("filedlg").click();
+  if($("filedlg").value != "")
+  {
+    try
+    {
+      $("stdout").innerHTML = "<textarea cols='120' rows='40'>"
+                            + GetManifest($("filedlg").value, false)
+                            + "</textarea>";
+    }
+    catch(err)
+    {
+      alert("Error opening the file " + $("filedlg").value + "\r\n" + err.message);
+    }
+  }
+}
+
+function GetIDLInfo()
+{
+  $("filedlg").click();
+  if($("filedlg").value != "")
+  {
+    try
+    {
+      $("stdout").innerHTML = "<textarea cols='120' rows='40'>"
+                            + GetIDL($("filedlg").value)
+                            + "</textarea>";
+      document.title = "TypeLib Info Tool - " + $("filedlg").value;
+    }
+    catch(err)
+    {
+      alert("Error opening the file " + $("filedlg").value + "\r\n" + err.message);
+    }
+  }
+}
+
+function QuickTypeLibInfo(libfilename)
+{
+  var sb = new StringBuilder();
+
+  // coclasses: SearchHelper, TypeLibInfo, TLIApplication
+
+  var tlbinfo = new ActiveXObject("TLI.TypeLibInfo");
+
+  tlbinfo.ContainingFile = libfilename;
+
+  sb.append("typelib " + tlbinfo.Name + "<br/>");
+  sb.append("GUID " + tlbinfo.GUID + "<br/>");
+  sb.append("LCID " + tlbinfo.LCID + "<br/>");
+
+  sb.append("<hr/>");
+
+  for(var i=0; i<tlbinfo.TypeInfoCount; ++i)
+  {
+    sb.append("<div class='type'>" + tlbinfo.GetTypeInfo(i).TypeKindString + " " +
+               tlbinfo.GetTypeInfo(i).Name + "</div>");
+
+    switch(tlbinfo.GetTypeInfo(i).TypeKind)
+    {
+      case TKIND.COCLASS:
+        sb.append("<div class='elements'>");
+        for(j=0; j<tlbinfo.GetTypeInfo(i).Interfaces.Count; ++j)
+          sb.append(tlbinfo.GetTypeInfo(i).Interfaces(j+1).Name + "<br/>");
+        sb.append("</div>");
+        break;
+      case TKIND.INTERFACE:
+      case TKIND.DISPATCH:
+        sb.append("<div class='elements'>");
+        for(j=0; j<tlbinfo.GetTypeInfo(i).Members.Count; ++j)
+          sb.append(tlbinfo.GetTypeInfo(i).Members(j+1).Name + "<br/>");
+        sb.append("</div>");
+        break;
+      case TKIND.ENUM:
+        sb.append("<div class='elements'>");
+        for(j=0; j<tlbinfo.GetTypeInfo(i).Members.Count; ++j)
+          sb.append(tlbinfo.GetTypeInfo(i).Members(j+1).Name + "<br/>");
+        sb.append("</div>");
+        break;
+      case TKIND.ALIAS:
+        sb.append("<div class='elements'>");
+        sb.append(tlbinfo.GetTypeInfo(i).ResolvedType.TypeInfo.Name + "<br/>");
+        sb.append("</div>");
+        break;
+      case TKIND.RECORD:
+        sb.append("<div class='elements'>");
+        for(j=0; j<tlbinfo.GetTypeInfo(i).Members.Count; ++j)
+          sb.append(tlbinfo.GetTypeInfo(i).Members(j+1).Name + "<br/>");
+        sb.append("</div>");
+        break;
+      case TKIND.MODULE:
+        sb.append("<div class='elements'>");
+        for(j=0; j<tlbinfo.GetTypeInfo(i).Members.Count; ++j)
+          sb.append(tlbinfo.GetTypeInfo(i).Members(j+1).Name + "<br/>");
+        sb.append("</div>");
+        break;
+      case TKIND.UNION:
+        sb.append("<div class='elements'>");
+        for(j=0; j<tlbinfo.GetTypeInfo(i).Members.Count; ++j)
+          sb.append(tlbinfo.GetTypeInfo(i).Members(j+1).Name + "<br/>");
+        sb.append("</div>");
+        break;
+      case TKIND.MAX:
+        sb.append("<div class='elements'>");
+        for(j=0; j<tlbinfo.GetTypeInfo(i).Members.Count; ++j)
+          sb.append(tlbinfo.GetTypeInfo(i).Members(j+1).Name + "<br/>");
+        sb.append("</div>");
+        break;
+    }
+  }
+
+  sb.append("<hr/>");
+/*                
+  var ccs = tlbinfo.CoClasses;
+  var ifs = tlbinfo.Interfaces;
+  var cns = tlbinfo.Constants;
+  var dcs = tlbinfo.Declarations;
+
+  for(var i=0; i<ccs.Count; ++i)
+    sb.append("coclass " + ccs(i+1) + "<br/>"); // base 1 !!!!
+  for(var i=0; i<ifs.Count; ++i)
+    sb.append("interface " + ifs(i+1) + "<br/>"); // base 1 !!!!
+  for(var i=0; i<cns.Count; ++i)
+    sb.append("constant " + cns(i+1) + "<br/>"); // base 1 !!!!
+  for(var i=0; i<dcs.Count; ++i)
+    sb.append("declaration " + dcs(i+1) + "<br/>"); // base 1 !!!!
+*/
+/*
+  var it = new Enumerator(tlbinfo.CoClasses);
+  while(! it.atEnd())
+  { 
+    sb.append(it.item().Name + "<br/>");
+    it.moveNext();
+  }
+*/
+  try
+  {
+    $("stdout").innerHTML = "<div style='font-family: Courier New'>" + sb.toString() + "</div>";
+  }
+  catch(err)
+  {
+    alert("Error opening the file " + libfilename + "\r\n" + err.message);
+  }
+}
+
+function StringBuilder(value)
+{
+  this.strings = new Array("");
+  this.strings.push(value);
+
+  // appends the given value to the end of this instance
+  this.append = function(value)
+  {
+    if(value)
+      this.strings.push(value);
+  }
+
+  // clears the string buffer
+  this.clear = function()
+  {
+    this.strings.length = 1;
+  }
+
+  // converts to a String
+  this.toString = function()
+  {
+    return this.strings.join("");
+  }
+}
+
+// some libs return a string with null characters
+// this function truncates the string at the first null character
+function fix_string_with_nulls(txt)
+{
+  var ret = new String();
+  
+  for(i=0; i<txt.length; ++i)
+  {
+    // Note!
+    // for some reason this test is _NOT_ the same as (txt.charAt(i) == 0)
+    if(txt.charAt(i) == '\0')
+      break; // cuts the string at the first null char
+
+    ret += txt.charAt(i);
+  }
+  return ret;
+}
+
+Array.prototype.indexOf = function(obj)
+{
+  for(var i=0; i<this.length; ++i)
+    if(this[i] == obj)
+      return i;
+  return -1;
+}
+
+Array.prototype.has = function(obj)
+{
+  return this.indexOf(obj) >= 0;
+}
+
+function fillstring(count, ch)
+{
+  var ret = new String();
+  for(var i=0; i<count; ++i)
+    ret += ch;
+  return ret;
+}
+
+function lpad(ContentToSize, PadLength, PadChar)
+{
+   var PaddedString = ContentToSize.toString();
+   for(var i=ContentToSize.length+1; i<=PadLength; ++i)
+   {
+       PaddedString = PadChar + PaddedString;
+   }
+   return PaddedString;
+}
+  
+function toHex(val)
+{
+  return (val ? "0x" : "") + lpad((val >>> 0).toString(16), 8, "0");
+}
+
+function to_IDL_GUID(val)
+{
+  return val.substring(1, val.length-1);
+}
+
+function printVariant(val)
+{
+  if(typeof val == "string")
+    return "\"" + val + "\"";
+  else if(typeof val == "boolean")
+    return val ? -1 : 0;
+  else
+    return val;
+}
+
+var donotdisplay = [ 1610612736 // IUnknown::QueryInterface
+                    ,1610612737 // IUnknown::AddRef
+                    ,1610612738 // IUnknown::Release
+                    ,1610678272 // IDispatch::GetTypeInfoCount
+                    ,1610678273 // IDispatch::GetTypeInfo
+                    ,1610678274 // IDispatch::GetIDsOfNames
+                    ,1610678275 // IDispatch::Invoke
+                   ];
+VT_EMPTY = 0;
+VT_NULL = 1;
+VT_I2 = 2;
+VT_I4 = 3;
+VT_R4 = 4;
+VT_R8 = 5;
+VT_CY = 6;
+VT_DATE = 7;
+VT_BSTR = 8;
+VT_DISPATCH = 9;
+VT_ERROR = 10;
+VT_BOOL = 11;
+VT_VARIANT = 12;
+VT_UNKNOWN = 13;
+VT_DECIMAL = 14;
+VT_I1 = 16;
+VT_UI1 = 17;
+VT_UI2 = 18;
+VT_UI4 = 19;
+VT_I8 = 20;
+VT_UI8 = 21;
+VT_INT = 22;
+VT_UINT = 23;
+VT_VOID = 24;
+VT_HRESULT = 25;
+VT_PTR = 26;
+VT_SAFEARRAY = 27;
+VT_CARRAY = 28;
+VT_USERDEFINED = 29;
+VT_LPSTR = 30;
+VT_LPWSTR = 31;
+VT_RECORD = 36;
+VT_FILETIME = 64;
+VT_BLOB = 65;
+VT_STREAM = 66;
+VT_STORAGE = 67;
+VT_STREAMED_OBJECT = 68;
+VT_STORED_OBJECT = 69;
+VT_BLOB_OBJECT = 70;
+VT_CF = 71;
+VT_CLSID = 72;
+VT_VECTOR = 4096;
+VT_ARRAY = 8192;
+VT_BYREF = 16384;
+VT_RESERVED = 32768;
+
+function GetType(iType)
+{
+  var res = new String();
+  
+  switch(iType & 4095)
+  {
+//    case VT_ARRAY: res = "VT_ARRAY"; break;
+    case VT_BLOB: res = "VT_BLOB"; break;
+    case VT_BLOB_OBJECT: res = "VT_BLOB_OBJECT"; break;
+    case VT_BOOL: res = "VARIANT_BOOL"; break;
+    case VT_BSTR: res = "BSTR"; break;
+//    case VT_BYREF: res = "VT_BYREF"; break;
+    case VT_CARRAY: res = "VT_CARRAY"; break;
+    case VT_CF: res = "VT_CF"; break;
+    case VT_CLSID: res = "VT_CLSID"; break;
+    case VT_CY: res = "VT_CY"; break;
+    case VT_DATE: res = "VT_DATE"; break;
+    case VT_DECIMAL: res = "VT_DECIMAL"; break;
+    case VT_DISPATCH: res = "IDispatch*"; break;
+    case VT_EMPTY: res = "VT_EMPTY"; break;
+    case VT_ERROR: res = "VT_ERROR"; break;
+    case VT_FILETIME: res = "VT_FILETIME"; break;
+    case VT_HRESULT: res = "HRESULT"; break;
+    case VT_I1: res = "char"; break;
+    case VT_I2: res = "short"; break;
+    case VT_I4: res = "long"; break;
+    case VT_I8: res = "VT_I8"; break;
+    case VT_INT: res = "int"; break;
+    case VT_LPSTR: res = "VT_LPSTR"; break;
+    case VT_LPWSTR: res = "VT_LPWSTR"; break;
+    case VT_NULL: res = "VT_NULL"; break;
+    case VT_PTR: res = "VT_PTR"; break;
+    //case VT_R4: res = "float"; break; // float or single ???
+    case VT_R4: res = "single"; break;
+    case VT_R8: res = "double"; break;
+    case VT_RECORD: res = "VT_RECORD"; break;
+    //case VT_RESERVED: res = "VT_RESERVED"; break;
+    case VT_SAFEARRAY: res = "SAFEARRAY"; break;
+    case VT_STORAGE: res = "VT_STORAGE"; break;
+    case VT_STORED_OBJECT: res = "VT_STORED_OBJECT"; break;
+    case VT_STREAM: res = "VT_STREAM"; break;
+    case VT_STREAMED_OBJECT: res = "VT_STREAMED_OBJECT"; break;
+    case VT_UI1: res = "unsigned char"; break;
+    case VT_UI2: res = "unsigned short"; break;
+    case VT_UI4: res = "unsigned long"; break;
+    case VT_UI8: res = "VT_UI8"; break;
+    case VT_UINT: res = "unsigned int"; break;
+    case VT_UNKNOWN: res = "IUnknown*"; break;
+    case VT_USERDEFINED: res = "VT_USERDEFINED"; break;
+    case VT_VARIANT: res = "VARIANT"; break;
+    //case VT_VECTOR: res = "VT_VECTOR"; break;
+    case VT_VOID: res = "void"; break;
+    //default: res = "VT(" + iType + ")"; break;
+  }
+
+       if(iType & VT_ARRAY)    return "SAFEARRAY(" + res + ")";
+  else if(iType & VT_VECTOR)   return "VT_VECTOR(" + res + ")";
+  else if(iType & VT_BYREF)    return "VT_BYREF(" + res + ")";
+  else if(iType & VT_RESERVED) return "VT_RESERVED(" + res + ")";
+  else if(iType & ~4095)       return "???(" + iType + ")";
+  else                         return res;
+}
+
+function GetCallConv(cc)
+{
+/*
+  enum {
+      CC_FASTCALL = 0,
+      CC_CDECL = 1,
+      CC_MSCPASCAL = 2,
+      CC_PASCAL = 2,
+      CC_MACPASCAL = 3,
+      CC_STDCALL = 4,
+      CC_FPFASTCALL = 5,
+      CC_SYSCALL = 6,
+      CC_MPWCDECL = 7,
+      CC_MPWPASCAL = 8,
+      CC_MAX = 9
+  } CallConvs;
+*/
+  switch(cc)
+  {
+    case 0: return "_fastcall ";
+    case 1: return "_cdecl ";
+    case 2: return "_pascal ";
+    case 3: return "_macpascal ";
+    case 4: return "_stdcall ";
+    default: return "";
+  }
+}
+
+function GetIDL(libfilename)
+{
+  var sb = new StringBuilder();
+  var tlbinfo = new ActiveXObject("TLI.TypeLibInfo");
+
+  tlbinfo.ContainingFile = libfilename;
+/*
+  sb.append("//  LCID = " + tlbinfo.LCID + "\r\n"
+           + "//  HelpFile = " + fix_string_with_nulls(tlbinfo.HelpFile) + "\r\n"
+           + "//  HelpContext = " + tlbinfo.HelpContext + "\r\n"
+           + "//  AttributeMask = " + tlbinfo.AttributeMask + "\r\n"
+           + "//  AppObjString = " + tlbinfo.AppObjString + "\r\n"
+           + "//  LibNum = " + tlbinfo.LibNum + "\r\n"
+           + "//  SysKind = " + tlbinfo.SysKind + "\r\n");
+
+  try
+  {
+    // this code crashes for some libs (dcomp.ocx)
+    sb.append("//  HelpStringDll = " + tlbinfo.HelpStringDll + "\r\n"
+             + "//  HelpStringContext = " + tlbinfo.HelpStringContext + "\r\n"); // crashes sometimes (dcomp.ocx)
+  }
+  catch(err)
+  {
+  }
+
+  sb.append("//  flags = " + (tlbinfo.AttributeMask & 2 ? "control" : "") + "\r\n");
+
+  sb.append("\r\n");
+*/
+  sb.append("// Generated .IDL file (by TypeLibInfoTool.hta)\r\n"
+           + "//\r\n"
+           + "// typelib filename: " + libfilename + "\r\n"
+           + "\r\n"
+           + "[\r\n"
+           + "  uuid(" +  to_IDL_GUID(tlbinfo.GUID) + "),\r\n"
+           + "  version(" + tlbinfo.MajorVersion + "." + tlbinfo.MinorVersion + ")");
+           
+  if(tlbinfo.HelpString)
+    sb.append(",\r\n  helpstring(\"" + fix_string_with_nulls(tlbinfo.HelpString) + "\")");
+  
+  if(tlbinfo.HelpFile)
+    sb.append(",\r\n  helpfile(\"" + fix_string_with_nulls(tlbinfo.HelpFile) + "\")");
+    
+  if(tlbinfo.HelpContext)         
+    sb.append(",\r\n  helpcontext(" + toHex(tlbinfo.HelpContext) + ")");
+    
+  sb.append("\r\n"
+           + "]\r\n"
+           + "library " + tlbinfo.Name + "\r\n"
+           + "{\r\n"
+           + "    // TLib :     // TLib : OLE Automation : {00020430-0000-0000-C000-000000000046}\r\n"
+           + "    importlib(\"stdole2.tlb\");\r\n");
+  
+  // TODO: get all the imports to be placed in importlib(...) from the object
+  
+//  debugger;
+
+  if($("orderbytype").checked)
+  {
+    if($("use_declarations").checked)
+      GetIDL_Declarations(sb, tlbinfo.Declarations);
+
+    if($("use_enums").checked)
+      GetIDL_Enums(sb, tlbinfo.Enums);
+
+    if($("use_typedefs").checked)
+      GetIDL_Typedefs(sb, tlbinfo.IntrinsicAliases);
+
+    if($("use_interfaces").checked)
+      GetIDL_Interfaces(sb, tlbinfo.Interfaces);
+
+    if($("use_coclasses").checked)
+      GetIDL_CoClasses(sb, tlbinfo.CoClasses);
+
+//    if($("use_structs").checked)
+//      GetIDL_Structs(sb, tlbinfo.???); // to be implemented
+
+//    if($("use_consts").checked)
+//      GetIDL_Consts(sb, tlbinfo.???); // to be implemented
+  }
+  else
+  {
+    for(var i=0; i<tlbinfo.TypeInfoCount; ++i)
+    {
+      // tlbinfo.GetTypeInfo(i).TypeKindString
+      // tlbinfo.GetTypeInfo(i).Name
+
+      switch(tlbinfo.GetTypeInfo(i).TypeKind)
+      {
+        case TKIND.COCLASS:
+          if($("use_coclasses").checked)
+            GetIDL_CoClass(sb, tlbinfo.GetTypeInfo(i));
+          break;
+        case TKIND.INTERFACE: // never found a case when this value is used!
+        case TKIND.DISPATCH:
+          if($("use_interfaces").checked)
+            GetIDL_Interface(sb, tlbinfo.GetTypeInfo(i));
+          break;
+        case TKIND.ENUM:
+          if($("use_enums").checked)
+            GetIDL_Enum(sb, tlbinfo.GetTypeInfo(i));
+          break;
+        case TKIND.ALIAS:
+          GetIDL_Alias(sb, tlbinfo.GetTypeInfo(i));
+          break;
+        case TKIND.RECORD:
+          //GetIDL_Record(sb, tlbinfo.GetTypeInfo(i));
+          break;
+        case TKIND.MODULE:
+          if($("use_declarations").checked)
+            GetIDL_Declaration(sb, tlbinfo.GetTypeInfo(i));
+          break;
+        case TKIND.UNION:
+          //GetIDL_Union(sb, tlbinfo.GetTypeInfo(i));
+          break;
+        case TKIND.MAX:
+          //GetIDL_Max(sb, tlbinfo.GetTypeInfo(i));
+          break;
+      }
+    }
+  }
+  
+  sb.append("};\r\n");
+  
+  return sb.toString();
+}
+
+function GetIDL_Declarations(sb, dcs)
+{
+  for(var i=0; i<dcs.Count; ++i)
+    GetIDL_Declaration(sb, dcs(i+1));
+}
+
+function GetIDL_Enums(sb, enums)
+{
+  for(var i=0; i<enums.Count; ++i)
+    GetIDL_Enum(sb, enums(i+1));
+}
+
+function GetIDL_Aliases(sb, aliases)
+{
+  for(var i=0; i<aliases.Count; ++i)
+    GetIDL_Alias(sb, aliases(i+1));
+}
+
+function GetIDL_CoClasses(sb, ccs)
+{
+  for(var i=0; i<ccs.Count; ++i)
+    GetIDL_CoClass(sb, ccs(i+1));
+}
+
+function GetIDL_Interfaces(sb, ifs)
+{
+  for(var i=0; i<ifs.Count; ++i)
+    GetIDL_Interface(sb, ifs(i+1));
+}
+
+function GetIDL_Members(sb, mbs, is_module)
+{ 
+  for(var j=0; j<mbs.Count; ++j)
+    GetIDL_Member(sb, mbs(j+1), is_module);
+}
+
+function GetIDL_Parameters(sb, prs, paramcount) 
+{
+  for(var k=0; k<prs.Count; ++k)
+  {
+    if(k) sb.append(", ");
+    GetIDL_Parameter(sb, prs(k+1), paramcount);
+  }
+}
+
+function GetIDL_Declaration(sb, objdcl)
+{
+  sb.append("\r\n    [\r\n"
+           //+ "      uuid(" + to_IDL_GUID(objdcl.GUID) + "),\r\n" // not available for traditional dll's
+           + "      dllname(" + "???" + ")");
+
+  //debugger;
+           
+  if(objdcl.HelpString)
+    sb.append(",\r\n      helpstring(\"" + fix_string_with_nulls(objdcl.HelpString) + "\")");
+    
+  if(objdcl.HelpContext)         
+    sb.append(",\r\n      helpcontext(" + toHex(objdcl.HelpContext) + ")");
+           
+  sb.append("\r\n    ]\r\n"
+           + "    module " + objdcl.Name + " {\r\n");
+
+  // ??? entry -> id
+  GetIDL_Members(sb, objdcl.Members, true);
+
+  sb.append("    };\r\n");
+}
+
+function GetIDL_Enum(sb, objenum)
+{
+/*
+    typedef [helpstring("Actions for CustomFilter.Visit"), helpcontext(0x00000412)]
+    enum {
+        tliCfaLeave = 0,
+        tliCfaDuplicate = 1,
+        tliCfaExtract = 2,
+        tliCfaDelete = 3
+    } TliCustomFilterAction;
+*/
+  sb.append("\r\n    typedef ");
+
+  if(objenum.HelpString || objenum.HelpContext)
+  {
+    sb.append("[");
+
+    if(objenum.HelpString)
+      sb.append("helpstring(\"" + fix_string_with_nulls(objenum.HelpString) + "\")");
+      
+    if(objenum.HelpContext)         
+    {
+      if(objenum.HelpString)
+        sb.append(", ");
+      sb.append("helpcontext(" + toHex(objenum.HelpContext) + ")");
+    }
+
+    sb.append("]\r\n    ");
+  }
+
+  sb.append("enum {\r\n");
+
+  for(var i=0; i<objenum.Members.Count; ++i)
+  {
+    if(i != 0)
+      sb.append(",\r\n");
+
+    sb.append("        " + objenum.Members(i+1).Name + " = " + objenum.Members(i+1).Value);
+  }
+
+  sb.append("\r\n    } " + objenum.Name + ";\r\n");
+}
+
+function GetIDL_Alias(sb, objalias)
+{
+/*
+    typedef [uuid(9EFD8B51-C7B8-11D1-B1E6-00105CAA0A4C), version(1.0), public]
+    _CKDBerror CKDBerror___v0;
+*/
+  sb.append("\r\n    typedef [uuid(" + to_IDL_GUID(objalias.GUID) + ")");
+          
+  if(objalias.MajorVersion != 0 || objalias.MinorVersion != 0)
+    sb.append(", version(" + objalias.MajorVersion + "." + objalias.MinorVersion + ")");
+
+  sb.append(", public]\r\n");
+  sb.append("    " + objalias.ResolvedType.TypeInfo.Name + " " + objalias.Name + ";\r\n");
+}
+
+function GetIDL_CoClass(sb, objcls)
+{
+  sb.append("\r\n    [\r\n"
+           + "      uuid(" + to_IDL_GUID(objcls.GUID) + ")");
+          
+  if(objcls.MajorVersion != 0 || objcls.MinorVersion != 0)
+    sb.append(",\r\n      version(" + objcls.MajorVersion + "." + objcls.MinorVersion + ")");
+
+  if(objcls.HelpString)
+    sb.append(",\r\n      helpstring(\"" + fix_string_with_nulls(objcls.HelpString) + "\")");
+    
+  if(objcls.HelpContext)         
+    sb.append(",\r\n      helpcontext(" + toHex(objcls.HelpContext) + ")");
+           
+  sb.append("\r\n    ]\r\n"
+           + "    coclass " + objcls.Name + " {\r\n");
+
+  var ifs = objcls.Interfaces;
+
+  for(var j=0; j<ifs.Count; ++j)
+  {
+    if(ifs(j+1).Name == objcls.DefaultInterface.Name)
+      sb.append("        [default] interface " + objcls.Interfaces(j+1).Name + ";\r\n");
+    else
+      sb.append("        interface " + objcls.Interfaces(j+1).Name + ";\r\n");
+  }        
+
+  sb.append("    };\r\n");
+}
+
+function GetIDL_Interface(sb, objintf)
+{
+  //debugger;
+  
+  // TODO: check how to use objintf.VTableInterface
+  
+  sb.append("\r\n    [\r\n"
+           + "      odl,\r\n"
+           + "      uuid(" + to_IDL_GUID(objintf.GUID) + "),\r\n");
+          
+  if(objintf.MajorVersion != 0 || objintf.MinorVersion != 0)
+    sb.append("      version(" + objintf.MajorVersion + "." + objintf.MinorVersion + "),\r\n");
+  
+  if(objintf.HelpString)
+    sb.append("      helpstring(\"" + fix_string_with_nulls(objintf.HelpString) + "\"),\r\n");
+    
+  if(objintf.HelpContext)
+    sb.append("      helpcontext(" + toHex(objintf.HelpContext) + "),\r\n");
+          
+  if(objintf.AttributeMask & 16)
+    sb.append("      hidden,\r\n");
+    
+  if(true)
+    sb.append("      dual,\r\n");
+    
+  sb.append("      nonextensible,\r\n"
+           + "      oleautomation\r\n"
+           + "    ]\r\n"
+           + "    interface " + objintf.Name);
+/*
+  enum {
+      TKIND_ENUM = 0,
+      TKIND_RECORD = 1,
+      TKIND_MODULE = 2,
+      TKIND_INTERFACE = 3,
+      TKIND_DISPATCH = 4,
+      TKIND_COCLASS = 5,
+      TKIND_ALIAS = 6,
+      TKIND_UNION = 7,
+      TKIND_MAX = 8
+  } TypeKinds;
+*/
+//  sb.append(objintf.TypeKind);
+  // dispinterface, alias
+  //sb.append(objintf.TypeKindString);
+  
+  for(var j=0; j<objintf.ImpliedInterfaces.Count; ++j)
+    sb.append((j ? ", " : " : ") + objintf.ImpliedInterfaces(j+1).Name);
+
+  sb.append(" {\r\n");
+  GetIDL_Members(sb, objintf.Members, false);
+  sb.append("    };\r\n");
+}
+
+function GetIDL_Member(sb, objmbr, is_module)
+{ 
+  if(donotdisplay.has(objmbr.MemberId))
+    return;
+
+  sb.append("        "
+           + (is_module ? "[entry(" : "[id(") + toHex(objmbr.MemberId) + ")");
+/*
+  enum {
+      INVOKE_UNKNOWN = 0,
+      INVOKE_FUNC = 1,
+      INVOKE_PROPERTYGET = 2,
+      INVOKE_PROPERTYPUT = 4,
+      INVOKE_PROPERTYPUTREF = 8,
+      INVOKE_EVENTFUNC = 16,
+      INVOKE_CONST = 32
+  } InvokeKinds;
+*/
+  switch(objmbr.InvokeKind)
+  {
+    case 1: break;
+    case 2: sb.append(", propget"); break;
+    case 4: sb.append(", propput"); break;
+    case 8: sb.append(", propputref"); break;
+    default: sb.append(", ik(" + objmbr.InvokeKind + ")"); break;
+  }
+
+  sb.append((objmbr.AttributeMask & 1) ? ", restricted" : "");
+  sb.append((objmbr.AttributeMask & 64) ? ", hidden" : "");
+
+  // vararg ????
+  if(false)
+    sb.append(", vararg");
+  
+  if(objmbr.HelpString)
+    sb.append(", helpstring(\"" + fix_string_with_nulls(objmbr.HelpString) + "\")");
+    
+  if(objmbr.HelpContext)
+    sb.append(", helpcontext(" + toHex(objmbr.HelpContext) + ")");
+  
+  sb.append("]\r\n        ");
+/*            
+  if(objmbr.ReturnType.TypeInfo)
+      sb.append(GetType(objmbr.ReturnType.VarType) + "%" + objmbr.ReturnType.TypeInfo.Name);
+  else
+      sb.append(GetType(objmbr.ReturnType.VarType));
+      
+  sb.append(fillstring(objmbr.ReturnType.PointerLevel, "*") + " ");
+
+  sb.append(objmbr.Name + "(");
+  GetIDL_Parameters(sb, objmbr.Parameters)
+  sb.append(");\r\n");
+*/
+  var totcount = objmbr.Parameters.Count;
+  if(objmbr.ReturnType.VarType != VT_VOID)
+    ++totcount;
+    
+  sb.append("HRESULT " + (is_module ? GetCallConv(objmbr.CallConv) : "") + objmbr.Name + "(");
+  GetIDL_Parameters(sb, objmbr.Parameters, totcount);
+  
+  //debugger;
+  
+  if(objmbr.ReturnType.TypeInfo)
+  {
+    if(totcount > 1)
+      sb.append(", \r\n                        ");
+    
+    if(objmbr.InvokeKind == 4 || // INVOKE_PROPERTYPUT
+        objmbr.InvokeKind == 8) // INVOKE_PROPERTYPUTREF
+      sb.append("[in] ");
+    else
+      sb.append("[out, retval] ");
+
+    sb.append(objmbr.ReturnType.TypeInfo.Name);
+    
+    if(objmbr.InvokeKind != 4 && // INVOKE_PROPERTYPUT
+        objmbr.InvokeKind != 8) // INVOKE_PROPERTYPUTREF
+      sb.append("*");
+
+    // TODO: get the name of the parameter rather than putting a hard-coded "retVal"
+    sb.append(fillstring(objmbr.ReturnType.PointerLevel, "*") + " retVal");
+  }
+  else
+  {
+    if(objmbr.ReturnType.VarType != VT_VOID)
+    {
+      if(totcount > 1)
+        sb.append(", \r\n                        ");
+    
+      if(objmbr.InvokeKind == 4 || // INVOKE_PROPERTYPUT
+          objmbr.InvokeKind == 8) // INVOKE_PROPERTYPUTREF
+        sb.append("[in] ");
+      else
+        sb.append("[out, retval] ");
+
+      sb.append(GetType(objmbr.ReturnType.VarType));
+    
+      if(objmbr.InvokeKind != 4 && // INVOKE_PROPERTYPUT
+          objmbr.InvokeKind != 8) // INVOKE_PROPERTYPUTREF
+        sb.append("*");
+
+      // TODO: get the name of the parameter rather than putting a hard-coded "retVal"
+      sb.append(fillstring(objmbr.ReturnType.PointerLevel, "*") + " retVal");
+    }
+  }        
+
+  sb.append(");\r\n");
+}
+
+function GetIDL_Parameter(sb, objprm, paramcount) 
+{
+/*
+  enum {
+      PARAMFLAG_NONE = 0,
+      PARAMFLAG_FIN = 1,
+      PARAMFLAG_FOUT = 2,
+      PARAMFLAG_FLCID = 4,
+      PARAMFLAG_FRETVAL = 8,
+      PARAMFLAG_FOPT = 16,
+      PARAMFLAG_FHASDEFAULT = 32,
+      PARAMFLAG_FHASCUSTDATA = 64
+  } ParamFlags;
+*/
+  if(objprm.Flags)
+  {
+    if(paramcount > 1)
+      sb.append("\r\n                        [");
+    else
+      sb.append("[");
+
+    switch(objprm.Flags & 11)
+    {
+      case 1: sb.append("in"); break;
+      case 2: sb.append("out"); break;
+      case 3: sb.append("in, out"); break;
+      case 10: sb.append("out, retval"); break;
+      default: sb.append("Flags=" + objprm.Flags);
+    }
+    sb.append((objprm.Flags & 16) ? ", optional" : "");
+    sb.append((objprm.Optional ? ", optional" : "")
+             + (objprm.Default ? (", defaultvalue(" + printVariant(objprm.DefaultValue) + ")") : ""));
+    sb.append("] ");
+  }
+  
+  if(objprm.VarTypeInfo.TypeInfo)
+    if(objprm.VarTypeInfo.VarType & VT_ARRAY)
+      sb.append("SAFEARRAY(" + objprm.VarTypeInfo.TypeInfo.Name + ")");
+    else
+      sb.append(objprm.VarTypeInfo.TypeInfo.Name);
+  else
+    sb.append(GetType(objprm.VarTypeInfo.VarType));
+      
+  //sb.append(objprm.VarTypeInfo.TypedVariant;
+  sb.append(fillstring(objprm.VarTypeInfo.PointerLevel, "*") + " ");
+  
+  sb.append(objprm.Name);
+}
+
+function GetManifest(libfilename, singlefile)
+{
+  var stdout = new String();
+  var tlbinfo = new ActiveXObject("TLI.TypeLibInfo");
+
+  tlbinfo.ContainingFile = libfilename;
+
+  if(singlefile)
+    stdout += "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\r\n"
+            + "<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>\r\n"
+            + "  <assemblyIdentity type='win32' name='" + tlbinfo.Name + "' version='" + "1.0.0.0" + "'/>\r\n";
+/*
+  stdout += "  <!--\r\n"
+          + "  LCID = " + tlbinfo.LCID + "\r\n"
+          + "  ContainingFile = " + tlbinfo.ContainingFile + "\r\n"
+          + "  Name = " + tlbinfo.Name + "\r\n"
+          + "  HelpContext = " + tlbinfo.HelpContext + "\r\n"
+          + "  HelpFile = " + fix_string_with_nulls(tlbinfo.HelpFile) + "\r\n"
+          + "  AttributeMask = " + tlbinfo.AttributeMask + "\r\n"
+          + "  HelpString = " + tlbinfo.HelpString + "\r\n"
+          + "  AppObjString = " + tlbinfo.AppObjString + "\r\n"
+          + "  LibNum = " + tlbinfo.LibNum + "\r\n"
+          + "  SysKind = " + tlbinfo.SysKind + "\r\n";
+
+  try
+  {
+    // this code crashes for some libs (dcomp.ocx)
+    stdout += "  HelpStringDll = " + tlbinfo.HelpStringDll + "\r\n"
+            + "  HelpStringContext = " + tlbinfo.HelpStringContext + "\r\n"; // crashes sometimes (dcomp.ocx)
+  }
+  catch(err)
+  {
+  }
+
+  stdout += "  -->\r\n";
+*/
+  stdout += "  <file name='" + libfilename + "'>\r\n"
+          + "    <typelib tlbid='" + tlbinfo.GUID + "' version='" + tlbinfo.MajorVersion + "." + tlbinfo.MinorVersion + "' flags='" + (tlbinfo.AttributeMask & 2 ? "control" : "") + "' helpdir=''/>\r\n";
+  
+  var ccs = tlbinfo.CoClasses;
+
+  for(var i=0; i<ccs.Count; ++i)
+    // The progID is is *not* necessarily exactly the same as the name of the type library!!!
+    // how to solve??? look up in the resources of the file???
+    stdout += "    <comClass progid='" + tlbinfo.Name + "." + ccs(i+1).Name + "' clsid='" + ccs(i+1).GUID + "' threadingModel='Apartment'/>\r\n";
+
+  stdout += "  </file>\r\n";
+
+  var ifs = tlbinfo.Interfaces;
+
+  for(var i=0; i<ifs.Count; ++i)
+    stdout += "  <comInterfaceExternalProxyStub\r\n"
+            + "    name='" + ifs(i+1).Name + "'\r\n"
+            + "    iid='" + ifs(i+1).GUID + "'\r\n"
+            + "    proxyStubClsid32='{00020424-0000-0000-C000-000000000046}'\r\n"
+            + "    baseInterface='{00000000-0000-0000-C000-000000000046}'\r\n"
+            + "    tlbid = '" + tlbinfo.GUID + "'/>\r\n";
+
+  if(singlefile)
+    stdout += "  </assemblyIdentity>\r\n" +
+              "</assembly>";
+
+  return stdout;
+}
+
+function foo(msg)
+{
+  alert(msg);
+}
+</script>
+</head>
+
+<body>
+
+<input type='file' id='filedlg' style='display:none;'/>
+
+<input type='checkbox' id='orderbytype'>Order by type</input>
+
+<br/><br/>
+
+<fieldset style='width: 300'>
+  <legend>Show Options</legend>
+
+  <input type='checkbox' id='use_declarations' checked='checked'>Declarations</input>
+  <br/>
+  <input type='checkbox' id='use_typedefs' checked='checked'>Typedefs</input>
+  <br/>
+  <input type='checkbox' id='use_enums' checked='checked'>Enums</input>
+  <br/>
+  <input type='checkbox' id='use_structs' checked='checked'>Structs</input>
+  <br/>
+  <input type='checkbox' id='use_interfaces' checked='checked'>Interfaces</input>
+  <br/>
+  <input type='checkbox' id='use_coclasses' checked='checked'>Coclasses</input>
+</fieldset>
+
+<br/><br/>
+
+<input type='button' value='Generate IDL...' title='Generates the IDL content of a Type Library.' onclick='GetIDLInfo()'/>
+<input type='button' value='Generate Manifest...' title='Generates the manifest file for a Type Library.' onclick='GetManifestInfo()'/>
+<input type='button' value='Quick TypeLib Info...' title='Writes information contained in a Type Library.' onclick='LoadTypeLib()'/>
+<br/>
+<br/>
+
+<div id='stdout'>
+</div>
+
+</body>
+</html>
